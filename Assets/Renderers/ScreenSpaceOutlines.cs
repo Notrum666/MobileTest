@@ -104,8 +104,8 @@ public class URP_Feature : ScriptableRendererFeature
     {
         private readonly Material fogMaterial;
         private RenderTargetIdentifier cameraColorTarget;
-        private RenderTargetIdentifier temporaryBuffer;
-        private int temporaryBufferID = Shader.PropertyToID("_TemporaryBuffer2");
+        private RenderTargetIdentifier temporaryBuffer2;
+        private int temporaryBufferID2 = Shader.PropertyToID("_TemporaryBuffer2");
         public FogPass(RenderPassEvent renderPassEvent)
         {
             this.renderPassEvent = renderPassEvent;
@@ -126,8 +126,8 @@ public class URP_Feature : ScriptableRendererFeature
                 context.ExecuteCommandBuffer(cmd);
                 cmd.Clear();
 
-                Blit(cmd, cameraColorTarget, temporaryBuffer);
-                Blit(cmd, temporaryBuffer, cameraColorTarget, fogMaterial);
+                Blit(cmd, cameraColorTarget, temporaryBuffer2);
+                Blit(cmd, temporaryBuffer2, cameraColorTarget, fogMaterial);
             }
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);

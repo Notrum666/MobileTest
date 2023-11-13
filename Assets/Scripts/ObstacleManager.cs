@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using Photon.Pun;
 
 public class ObstacleManager : MonoBehaviour
 {
@@ -15,7 +16,9 @@ public class ObstacleManager : MonoBehaviour
     [SerializeField]
     private float acceleration, spawnDistance, spawnInterval, maxSpeed;
     [SerializeField]
-    GameObject player;
+    GameObject PlayerPrefab;
+    [SerializeField]
+    GameObject MenuCamera;
     [SerializeField]
     GameObject RedOverlay;
     [SerializeField]
@@ -23,8 +26,12 @@ public class ObstacleManager : MonoBehaviour
     [SerializeField]
     GameObject HighscoreText, DeathHighscoreText;
 
+    GameObject localPlayer;
+
     [SerializeField]
     GameObject MenuPanel, GamePanel, DeathPanel;
+
+    public static ObstacleManager Instance;
 
     int score = 0;
     int highscore = 0;
@@ -36,10 +43,22 @@ public class ObstacleManager : MonoBehaviour
     {
         highscore = PlayerPrefs.GetInt("highscore");
         HighscoreText.GetComponent<TextMeshProUGUI>().SetText("high score: " + highscore.ToString());
+
+        Instance = this;
     }
 
-    void startGame()
+    public void StartGame()
     {
+        MenuCamera.SetActive(false);
+        MenuPanel.SetActive(false);
+        DeathPanel.SetActive(false);
+        GamePanel.SetActive(true);
+
+        if (PhotonNetwork.CurrentRoom != null)
+            localPlayer = PhotonNetwork.Instantiate(PlayerPrefab.name, Vector3.zero, Quaternion.Euler(90, 0, 0));
+        else
+            localPlayer = Instantiate(PlayerPrefab, Vector3.zero, Quaternion.Euler(90, 0, 0));
+
         isGameActive = true;
         foreach (GameObject obstacle in obstacles)
         {
@@ -54,15 +73,28 @@ public class ObstacleManager : MonoBehaviour
     {
         isGameActive = false;
     }
+    public void ExitGame()
+    {
+        if (PhotonNetwork.IsConnected && PhotonNetwork.CurrentRoom != null)
+            PhotonNetwork.Destroy(localPlayer);
+        else
+            Destroy(localPlayer);
+        localPlayer = null;
+
+        MenuCamera.SetActive(true);
+        MenuPanel.SetActive(true);
+        DeathPanel.SetActive(false);
+        GamePanel.SetActive(false);
+    }
     // Update is called once per frame
     void Update()
     {
         if (!isGameActive)
             return;
-
+        return;
         CurFlySpeed = Mathf.Min(maxSpeed, CurFlySpeed + acceleration * Time.deltaTime);
 
-        Ray ray = new Ray(player.transform.position + Vector3.up * 2.0f, Vector3.down);
+        Ray ray = new Ray(localPlayer.transform.position + Vector3.up * 2.0f, Vector3.down);
 
         if (Physics.Raycast(ray, CurFlySpeed * Time.deltaTime + 2.0f))
         {
@@ -71,6 +103,9 @@ public class ObstacleManager : MonoBehaviour
             OnDeath();
             return;
         }
+
+        if (PhotonNetwork.CurrentRoom != null && !PhotonNetwork.IsMasterClient)
+            return;
 
         for (int i = obstacles.Count - 1; i >= 0; i--)
         {
@@ -101,11 +136,7 @@ public class ObstacleManager : MonoBehaviour
 
     public void OnStartClicked()
     {
-        MenuPanel.SetActive(false);
-        DeathPanel.SetActive(false);
-        GamePanel.SetActive(true);
-
-        startGame();
+        StartGame();
     }
     void OnDeath()
     {
