@@ -56,6 +56,12 @@ public class Launcher : MonoBehaviourPunCallbacks
             obstacleManager.StartGame();
     }
 
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        if (ObstacleManager.Instance.IsGameActive)
+            ObstacleManager.Instance.EndGame(true);
+    }
+
     public override void OnConnectedToMaster()
     {
         Debug.Log("OnConnectedToMaster()");
@@ -74,7 +80,10 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         Debug.Log("OnJoinedRoom()");
         if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        {
             obstacleManager.StartGame();
+            OnSearchStop();
+        }
     }
 
     public override void OnDisconnected(DisconnectCause cause)
