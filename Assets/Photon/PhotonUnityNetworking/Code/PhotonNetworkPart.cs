@@ -292,7 +292,7 @@ namespace Photon.Pun
             //}
 
             // Destroy GO's (if we should)
-            if (destroyInstantiatedGameObjects)
+            if (destroyInstantiatedGameObjects && false)
             {
                 // Fill list with Instantiated objects
                 HashSet<GameObject> instantiatedGos = new HashSet<GameObject>();

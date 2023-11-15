@@ -53,7 +53,12 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         Debug.Log("OnPlayerEnteredRoom()");
         if (PhotonNetwork.CurrentRoom.PlayerCount == 2)
+        {
             obstacleManager.StartGame();
+            OnSearchStop.Invoke();
+            isConnectedToMaster = false;
+            PhotonNetwork.CurrentRoom.IsOpen = false;
+        }
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
@@ -73,7 +78,7 @@ public class Launcher : MonoBehaviourPunCallbacks
         Debug.Log("OnJoinRandomFailed() PhotonNetwork.CreateRoom()");
 
         // #Critical: we failed to join a random room, maybe none exists or they are all full. No worries, we create a new room.
-        PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2 });
+        PhotonNetwork.CreateRoom(null, new RoomOptions() { MaxPlayers = 2, CleanupCacheOnLeave = false });
     }
 
     public override void OnJoinedRoom()
@@ -83,6 +88,7 @@ public class Launcher : MonoBehaviourPunCallbacks
         {
             obstacleManager.StartGame();
             OnSearchStop();
+            isConnectedToMaster = false;
         }
     }
 

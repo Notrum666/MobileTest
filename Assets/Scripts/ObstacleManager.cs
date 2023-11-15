@@ -65,16 +65,15 @@ public class ObstacleManager : MonoBehaviourPunCallbacks
         score = 0;
         ScoreText.GetComponent<TextMeshProUGUI>().SetText(score.ToString());
     }
-    void stopGame()
-    {
-        isGameActive = false;
-    }
     public void ExitGame()
     {
-        if (PhotonNetwork.IsConnected && PhotonNetwork.CurrentRoom != null)
-            PhotonNetwork.Destroy(localPlayer);
-        else
-            Destroy(localPlayer);
+        //if (PhotonNetwork.IsConnected && PhotonNetwork.CurrentRoom != null)
+        //    PhotonNetwork.Destroy(localPlayer);
+        //else
+        //    Destroy(localPlayer);
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        for (int i = 0;  i < players.Length; i++)
+            Destroy(players[i]);
         localPlayer = null;
 
         foreach (GameObject obstacle in obstacles)
@@ -99,10 +98,6 @@ public class ObstacleManager : MonoBehaviourPunCallbacks
 
         if (Physics.Raycast(ray, CurFlySpeed * Time.deltaTime + 2.0f))
         {
-            //Destroy(obstacles.First());
-            //obstacles.RemoveAt(0);
-            if (PhotonNetwork.CurrentRoom != null)
-                PhotonNetwork.Disconnect();
             EndGame(false);
             return;
         }
@@ -155,6 +150,14 @@ public class ObstacleManager : MonoBehaviourPunCallbacks
     }
     public void EndGame(bool win)
     {
+        if (!IsGameActive)
+            return;
+
+        isGameActive = false;
+
+        if (PhotonNetwork.CurrentRoom != null)
+            PhotonNetwork.LeaveRoom();
+
         DeathScoreText.GetComponent<TextMeshProUGUI>().SetText("score: " + score.ToString());
         if (score > highscore)
         {
@@ -166,8 +169,6 @@ public class ObstacleManager : MonoBehaviourPunCallbacks
 
         GamePanel.SetActive(false);
         EndGamePanel.SetActive(true);
-        EndGameColoredOverlay.color = win ? new Color(0.0f, 1.0f, 0.0f, 0.4f) : new Color(1.0f, 0.0f, 0.0f, 0.4f);
-
-        stopGame();
+        EndGameColoredOverlay.color = win ? new Color(0.0f, 1.0f, 0.0f, 0.15f) : new Color(1.0f, 0.0f, 0.0f, 0.15f);
     }
 }
