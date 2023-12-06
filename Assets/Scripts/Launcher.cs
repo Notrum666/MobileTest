@@ -4,6 +4,8 @@ using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
+using DevToDev.Analytics;
+using Sentry;
 
 public class Launcher : MonoBehaviourPunCallbacks
 {
@@ -26,15 +28,42 @@ public class Launcher : MonoBehaviourPunCallbacks
         // this makes sure we can use PhotonNetwork.LoadLevel() on the master client and all clients in the same room sync their level automatically
         PhotonNetwork.AutomaticallySyncScene = true;
     }
-    
+
     /// <summary>
     /// MonoBehaviour method called on GameObject by Unity during initialization phase.
     /// </summary>
     void Start()
     {
+        DTDAnalyticsConfiguration config = new DTDAnalyticsConfiguration
+        {
+            LogLevel = DTDLogLevel.Debug,
+            TrackingAvailability = DTDTrackingStatus.Enable
+        };
+
+#if UNITY_ANDROID
+        DTDAnalytics.Initialize("androidAppID", config);
+#elif UNITY_IOS
+        DTDAnalytics.Initialize("IosAppID", config);
+#elif UNITY_WEBGL
+        DTDAnalytics.Initialize("WebAppID", config);
+#elif UNITY_STANDALONE_WIN
+        DTDAnalytics.Initialize("2cad4dc2-ea6c-031b-a1e8-cc956eb84947", config);
+#elif UNITY_STANDALONE_OSX
+        DTDAnalytics.Initialize("OsxAppID", config);
+#elif UNITY_WSA
+        DTDAnalytics.Initialize("UwpAppID", config);
+#endif
+
+        //DTDAnalytics.StartActivity();
+
         Connect();
     }
-    
+
+    private void OnDestroy()
+    {
+        //DTDAnalytics.StopActivity();
+    }
+
     /// <summary>
     /// Start the connection process.
     /// - If already connected, we attempt joining a random room
@@ -46,6 +75,9 @@ public class Launcher : MonoBehaviourPunCallbacks
         {
             PhotonNetwork.ConnectUsingSettings();
             PhotonNetwork.GameVersion = gameVersion;
+
+            DTDAnalytics.CustomEvent("Connect event");
+            SentrySdk.CaptureMessage("Connect event");
         }
     }
 
